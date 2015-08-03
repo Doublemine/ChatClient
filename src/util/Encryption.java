@@ -44,10 +44,10 @@ public class Encryption {
 		return new String(hexChars);
 	}
 
-	public static void main(String[] args) {
-		String s = "000000";
-		String d = "00000";
-		System.out.println("EncryptionStr('123'):" + EncryptionStr(s));
-		System.out.println("EncryptionStr('456'):" + EncryptionStr(d));
-	}
+	// public static void main(String[] args) {
+	// String s = "000000";
+	// String d = "00000";
+	// System.out.println("EncryptionStr('123'):" + EncryptionStr(s));
+	// System.out.println("EncryptionStr('456'):" + EncryptionStr(d));
+	// }
 }

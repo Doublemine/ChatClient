@@ -1,11 +1,12 @@
 package main;
 
-import from.ChatForm;
+import from.LoginForm;
 
 public class ClientMain {
 
-	public static void main(String[] args) {
-		ChatForm loginForm = new ChatForm();
+	public static void main(String[] args) throws Exception {
+
+		LoginForm loginForm = new LoginForm();
 		loginForm.setVisible(true);
 	}
 }

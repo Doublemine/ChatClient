@@ -2,12 +2,18 @@ package from;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.net.Socket;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+
+import main.ClientDataCenter;
+import thread.SendMsgToServerThread;
 
 public class ChatForm extends JFrame {
 	/**
@@ -23,6 +29,7 @@ public class ChatForm extends JFrame {
 	private Font chatFont;
 	private JScrollPane chatsJScroll;
 	private JScrollPane inputJScroll;
+	private Socket socket;
 
 	private void GuiInit() {
 
@@ -80,6 +87,71 @@ public class ChatForm extends JFrame {
 		this.add(inputJScroll);
 		this.add(sendMsgButton);
 		this.add(clearButton);
+
+		clearButton.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				clearinput();
+			}
+		});
+
+		sendMsgButton.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				new SendMsgToServerThread(socket, inputArea.getText());
+				clearinput();
+			}
+		});
 	}
 
 	public ChatForm() {
@@ -92,7 +164,16 @@ public class ChatForm extends JFrame {
 		GuiInit();
 		this.validate();
 		this.repaint();
+		this.socket = ClientDataCenter.conServerSocket;
 
 	}
 
+	private void clearinput() {
+		this.inputArea.setText("");
+	}
+
+	// public static void main(String[] args) {
+	// ChatForm d = new ChatForm();
+	// d.setVisible(true);
+	// }
 }

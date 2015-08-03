@@ -2,6 +2,11 @@ package from;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.net.Socket;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -9,6 +14,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+
+import main.ClientDataCenter;
+import thread.ReceiveRegStatThread;
+import thread.SendRegInfoToServerThread;
 
 public class RegistForm extends JFrame {
 
@@ -24,6 +33,8 @@ public class RegistForm extends JFrame {
 	private JLabel passwdLabel2;
 	private JButton resetButton;
 	private JButton registButton;
+	private Socket socket;
+	private LoginForm loginForm;
 
 	/**
 	 * 初始化界面元素
@@ -114,6 +125,48 @@ public class RegistForm extends JFrame {
 				}
 				if (userPasswd1.getPassword().length > 5) {
 					if (validationPasswd()) {
+						/**
+						 * 本地密码验证通过 发送加密注册信息到服务器
+						 */
+						new SendRegInfoToServerThread(socket, userName
+								.getText(), new String(userPasswd2
+								.getPassword()), "#REGINFO#").start();
+						ExecutorService pool = Executors.newCachedThreadPool();
+						Future<Boolean> future = pool
+								.submit(new ReceiveRegStatThread(socket));
+						pool.shutdown();
+						try {
+							if (future.get()) {// 注册成功
+								Object[] options = { "登录到聊天室", "哦" };
+								int choose = JOptionPane.showOptionDialog(null,
+										"注册成功啦，你现在可以使用这个账号密码登录了。", "幸运的少年",
+										JOptionPane.YES_NO_OPTION,
+										JOptionPane.QUESTION_MESSAGE, null,
+										options, options[0]);
+
+								if (choose == 0) {
+									turnToLoginForm();
+								} else {
+									ClearContext();
+								}
+
+							} else {// 注册失败
+								JOptionPane.showMessageDialog(null,
+										"注册失败了，请重试！", "悲催的少年",
+										JOptionPane.ERROR_MESSAGE);
+							}
+						} catch (InterruptedException e1) {
+
+							System.err
+									.println("RegistForm--InterruptedException-注册线程池错误："
+											+ e.toString());
+						} catch (ExecutionException e1) {
+
+							System.err
+									.println("RegistForm--ExecutionException-注册线程池错误："
+											+ e.toString());
+
+						}
 
 					} else {// 密码不相等
 						JOptionPane.showMessageDialog(null,
@@ -170,6 +223,7 @@ public class RegistForm extends JFrame {
 		this.setResizable(false);
 		this.setLayout(null);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.socket = ClientDataCenter.regUserSocket;
 		InitGUI();
 		this.repaint();
 
@@ -200,5 +254,11 @@ public class RegistForm extends JFrame {
 		} else {
 			return false;
 		}
+	}
+
+	private void turnToLoginForm() {
+		loginForm = new LoginForm();
+		loginForm.setVisible(true);
+		this.dispose();
 	}
 }
