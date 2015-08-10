@@ -4,6 +4,8 @@ import java.io.FileInputStream;
 import java.net.Socket;
 import java.util.Properties;
 
+import javax.swing.JOptionPane;
+
 import main.ClientDataCenter;
 
 public class RegConServerThread extends Thread {
@@ -27,13 +29,18 @@ public class RegConServerThread extends Thread {
 	}
 
 	@Override
+	/**
+	 * 此进程用于建立与服务器的连接
+	 */
 	public void run() {
 		try {
 			Socket socket = new Socket(IPAdree, RegPort);
 			ClientDataCenter.regUserSocket = socket;
 		} catch (Exception exception) {
-			System.err.println("RegConServer--->" + exception.toString() + "\n"
-					+ "DEBUG: RegPort=" + RegPort + "\tIPAdress" + IPAdree);
+			JOptionPane.showMessageDialog(null,
+					"未能够连接到服务器，程序将自动退出。\n请检查网络连接或者config目录下的配置文件是否正确！", "严重警告",
+					JOptionPane.ERROR_MESSAGE);
+			System.exit(-1);
 		}
 	}
 }

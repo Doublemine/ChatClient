@@ -14,16 +14,16 @@ public class TcpSocketUtil {
 	 *            传入与服务器连接的Socket
 	 * @return 返回从服务器返回的布尔值状态
 	 */
-	public static boolean getServerFlag(Socket socket) {
-		InputStream is = null;
+	public static int getServerFlag(Socket socket) {
 		try {
-			is = socket.getInputStream();
+			InputStream is = socket.getInputStream();
 			DataInputStream dis = new DataInputStream(is);
-			return dis.readBoolean();
+			return dis.readInt();
+
 		} catch (Exception e) {
-			System.err.println("TcpSocketUtil--getServerFlag--Error:"
-					+ e.toString());
-			return false;
+			// System.err.println("TcpSocketUtil--getServerFlag--Error:"
+			// + e.toString());
+			return 1;
 		}
 
 	}
@@ -34,17 +34,16 @@ public class TcpSocketUtil {
 	 *            传入与服务器连接的Socket
 	 * @return 返回服务器返回的String消息
 	 */
-	public static String getServerData(Socket socket) {
-		InputStream is = null;
+	public synchronized static String ReceiveServerData(Socket socket) {
 		try {
-			is = socket.getInputStream();
+			InputStream is = socket.getInputStream();
 			DataInputStream dis = new DataInputStream(is);
 			return dis.readUTF();
 
 		} catch (Exception e) {
-			System.err.println("TcpSocketUtil--getServerData--Error:"
-					+ e.toString());
-			return "";
+			// System.err.println("TcpSocketUtil--ReceiveServerData--Error:"
+			// + e.toString());
+			return "#ERROR#MSG";
 		}
 
 	}
@@ -85,17 +84,16 @@ public class TcpSocketUtil {
 	 *            字符串消息
 	 * @return 给指定的socket服务器发送数据，成功true，否则为false。
 	 */
-	public static boolean sendClientData(Socket socket, String msg) {
-		OutputStream os = null;
-		DataOutputStream dos = null;
+	public static boolean sendStringToServer(Socket socket, String msg) {
 		try {
-			os = socket.getOutputStream();
-			dos = new DataOutputStream(os);
+			OutputStream os = socket.getOutputStream();
+			DataOutputStream dos = new DataOutputStream(os);
 			dos.writeUTF(msg);// 写入字符串
 			return true;
+
 		} catch (Exception e) {
-			System.err.println("TcpSocketUtil-ERROR-sendClientData:"
-					+ e.toString());
+			// System.err.println("TcpSocketUtil-ERROR-sendClientData:"
+			// + e.toString());
 			return false;
 		}
 

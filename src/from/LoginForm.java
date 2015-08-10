@@ -1,13 +1,11 @@
 package from;
 
-import java.awt.HeadlessException;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -17,7 +15,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import main.ClientDataCenter;
-import thread.MsgConServerThread;
 import thread.ReceiveLoginStatThread;
 import thread.RegConServerThread;
 import thread.SendRegInfoToServerThread;
@@ -36,12 +33,15 @@ public class LoginForm extends JFrame {
 	private JLabel passwdLabel;
 	private JButton loginButton;
 	private JButton registButton;
-	private Socket loginsocket;
 	// private Socket msgsocket;
 	private ChatForm chaForm;
+	private JOptionPane jop;
+	private LoginForm loginForm;
+	private Socket socket;
 
 	private void InitGUI() {
-
+		new RegConServerThread().start();
+		loginForm = this;
 		userName = new JTextField();
 		userPasswd = new JPasswordField();
 		usernameLabel = new JLabel();
@@ -78,107 +78,47 @@ public class LoginForm extends JFrame {
 		this.add(userPasswd);
 		this.add(registButton);
 		this.add(loginButton);
+		this.socket = ClientDataCenter.regUserSocket;
 
-		registButton.addMouseListener(new MouseListener() {
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
+		// 注册按钮按下
+		registButton.addActionListener(new ActionListener() {
 
 			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				toRegistForm();
+			public void actionPerformed(ActionEvent e) {
+				toRegistForm();// 转到注册界面
 			}
 		});
+		// 登录按钮按下
+		loginButton.addActionListener(new ActionListener() {
 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new SendRegInfoToServerThread(socket,
+						userName.getText().trim(), new String(userPasswd
+								.getPassword()), "#LOGIN#").start();
+				;
+				new ReceiveLoginStatThread(socket, chaForm, jop, loginForm,
+						userName.getText().trim()).start();
+
+			}
+		});
 		/**
-		 * 登录事件
+		 * 窗口关闭事件
 		 */
-		loginButton.addMouseListener(new MouseListener() {
-
+		this.addWindowStateListener(new WindowAdapter() {
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				new SendRegInfoToServerThread(loginsocket, userName.getText(),
-						new String(userPasswd.getPassword()), "#LOGIN#")
-						.start();
-				/* 发送登录信息完毕，等待响应 */
-				ExecutorService pool = Executors.newCachedThreadPool();
-				Future<Boolean> future = pool
-						.submit(new ReceiveLoginStatThread(loginsocket));
-				pool.shutdown();
-
+			public void windowClosing(WindowEvent e) {
 				try {
-					if (future.get()) {// 登录成功
-						new MsgConServerThread().start();
-						toChatForm();
-					} else {// 登录失败
-
-						JOptionPane.showMessageDialog(null, "密码或者用户名无效！",
-								"悲催的少年", JOptionPane.ERROR_MESSAGE);
-
-					}
-				} catch (HeadlessException e1) {
-
-					e1.printStackTrace();
-				} catch (InterruptedException e1) {
-
-					e1.printStackTrace();
-				} catch (ExecutionException e1) {
-
-					e1.printStackTrace();
+					socket.close();
+				} catch (IOException e1) {
+					System.err.println("关闭socket产生错误");
 				}
 			}
 		});
-
 	}
 
 	public LoginForm() {
-		new MsgConServerThread().start();
-		new RegConServerThread().start();
+
 		this.setTitle("聊天系统登录");
 		this.setSize(500, 350);
 		this.setLocation(300, 200);
@@ -188,11 +128,12 @@ public class LoginForm extends JFrame {
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		InitGUI();
 		this.repaint();
-		this.loginsocket = ClientDataCenter.regUserSocket;
-		// this.msgsocket = ClientDataCenter.conServerSocket;
 
 	}
 
+	/**
+	 * 关闭本界面，创建并转到注册界面
+	 */
 	public void toRegistForm() {
 		registForm = new RegistForm();
 		registForm.setVisible(true);
@@ -200,11 +141,14 @@ public class LoginForm extends JFrame {
 
 	}
 
-	private void toChatForm() {
-		chatForm = new ChatForm();
-		chatForm.setVisible(true);
-		this.dispose();
-
-	}
+	/**
+	 * 关闭本界面，创建并转到聊天界面
+	 */
+	// private void toChatForm() {
+	// chatForm = new ChatForm();
+	// chatForm.setVisible(true);
+	// this.dispose();
+	//
+	// }
 
 }

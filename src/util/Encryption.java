@@ -4,6 +4,9 @@ import java.security.MessageDigest;
 
 public class Encryption {
 
+	/* private final static String ENCODING = "UTF-8"; */
+	private static final String HEX_NUMS_STR = "0123456789ABCDEF";
+
 	/**
 	 * 
 	 * @param str
@@ -32,22 +35,65 @@ public class Encryption {
 	 * @return 返回16进制数组的String类型
 	 */
 	private static String byteArrayToHex(byte[] bytes) {
-		// 字符数组，用来存放十六进制字符
-		char[] hexReferChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-				'9', 'A', 'B', 'C', 'D', 'E', 'F' };
-		char[] hexChars = new char[bytes.length * 2];// 一个字节占8位，一个十六进制字符占4位；十六进制字符数组的长度为字节数组长度的两倍
-		int index = 0;
-		for (byte b : bytes) {
-			hexChars[index++] = hexReferChars[b >> 4 & 0xf];// 取字节的高4位
-			hexChars[index++] = hexReferChars[b & 0xf];// 取字节的低4位
+		StringBuffer hexString = new StringBuffer();
+		for (int i = 0; i < bytes.length; i++) {
+			String hex = Integer.toHexString(bytes[i] & 0xFF);
+			if (hex.length() == 1) {
+				hex = '0' + hex;
+			}
+			hexString.append(hex.toUpperCase());
 		}
-		return new String(hexChars);
+		return hexString.toString();
 	}
 
-	// public static void main(String[] args) {
-	// String s = "000000";
-	// String d = "00000";
-	// System.out.println("EncryptionStr('123'):" + EncryptionStr(s));
-	// System.out.println("EncryptionStr('456'):" + EncryptionStr(d));
-	// }
+	/**
+	 * 将16进制字符串转换成字节数组
+	 * 
+	 * @param hex
+	 *            传入hex String
+	 * @return 返回字符数组byte []
+	 */
+	public static byte[] hexStringToByte(String hex) {
+		int len = (hex.length() / 2);
+		byte[] result = new byte[len];
+		char[] hexChars = hex.toCharArray();
+		for (int i = 0; i < len; i++) {
+			int pos = i * 2;
+			result[i] = (byte) (HEX_NUMS_STR.indexOf(hexChars[pos]) << 4 | HEX_NUMS_STR
+					.indexOf(hexChars[pos + 1]));
+		}
+		return result;
+	}
+
+	/**
+	 * 解码Base64算法加密的字符串
+	 * 
+	 * @param str
+	 *            Base64加密之后的字符串
+	 * @return 返回解码之后的字符串
+	 */
+	/*
+	 * public static String base64Decode(String str) { try { byte[] b =
+	 * Base64.decodeBase64(str.getBytes(ENCODING)); return new String(b,
+	 * ENCODING); } catch (Exception e) { System.err.println("解码Base64失败:" +
+	 * e.toString()); return "#Decode#FAIL"; }
+	 * 
+	 * }
+	 */
+
+	/**
+	 * 使用Base64算法加密指定的字符串
+	 * 
+	 * @param data
+	 *            待加密的字符串
+	 * @return 返回Base64加密之后的字符串
+	 */
+	/*
+	 * public static String encodedSafe(String data) { try { byte[] b =
+	 * Base64.encodeBase64(data.getBytes(ENCODING), true); return new String(b,
+	 * ENCODING); } catch (Exception e) { System.err.println("加密Base64失败" +
+	 * e.toString()); return "#ENCODE#FAIL"; }
+	 * 
+	 * }
+	 */
 }

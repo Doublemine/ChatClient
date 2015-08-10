@@ -1,12 +1,8 @@
 package from;
 
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.Socket;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -35,12 +31,15 @@ public class RegistForm extends JFrame {
 	private JButton registButton;
 	private Socket socket;
 	private LoginForm loginForm;
+	private RegistForm registForm;
+	private JOptionPane jop;
 
 	/**
 	 * 初始化界面元素
 	 */
 	private void InitGUI() {
 
+		registForm = this;
 		userName = new JTextField();
 		userPasswd1 = new JPasswordField();
 		usernameLabel = new JLabel();
@@ -80,7 +79,7 @@ public class RegistForm extends JFrame {
 
 		registButton.setSize(100, 35);
 		registButton.setLocation(130, 220);
-
+		this.socket = ClientDataCenter.regUserSocket;
 		this.add(usernameLabel);
 		this.add(userName);
 		this.add(passwdLabel1);
@@ -90,91 +89,35 @@ public class RegistForm extends JFrame {
 		this.add(resetButton);
 		this.add(userPasswd2);
 
-		registButton.addMouseListener(new MouseListener() {
+		// 注册按钮按下
+		registButton.addActionListener(new ActionListener() {
 
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
+			public void actionPerformed(ActionEvent e) {
 
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (userName.getText().length() == 0) {
+				if (userName.getText().length() == 0) {// 没有输入用户名
 					JOptionPane.showMessageDialog(null, "同学，你的名字呢？", "无知的少年",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				if (userPasswd1.getPassword().length > 5) {
-					if (validationPasswd()) {
+				if (userPasswd1.getPassword().length > 5) {// 密码长度大于5，长度合适。
+					if (validationPasswd()) {// 两次输入的密码相同
 						/**
 						 * 本地密码验证通过 发送加密注册信息到服务器
 						 */
 						new SendRegInfoToServerThread(socket, userName
 								.getText(), new String(userPasswd2
-								.getPassword()), "#REGINFO#").start();
-						ExecutorService pool = Executors.newCachedThreadPool();
-						Future<Boolean> future = pool
-								.submit(new ReceiveRegStatThread(socket));
-						pool.shutdown();
-						try {
-							if (future.get()) {// 注册成功
-								Object[] options = { "登录到聊天室", "哦" };
-								int choose = JOptionPane.showOptionDialog(null,
-										"注册成功啦，你现在可以使用这个账号密码登录了。", "幸运的少年",
-										JOptionPane.YES_NO_OPTION,
-										JOptionPane.QUESTION_MESSAGE, null,
-										options, options[0]);
+								.getPassword()), "#REG#").start();
+						new ReceiveRegStatThread(socket, loginForm, registForm,
+								jop).start();
 
-								if (choose == 0) {
-									turnToLoginForm();
-								} else {
-									ClearContext();
-								}
-
-							} else {// 注册失败
-								JOptionPane.showMessageDialog(null,
-										"注册失败了，请重试！", "悲催的少年",
-										JOptionPane.ERROR_MESSAGE);
-							}
-						} catch (InterruptedException e1) {
-
-							System.err
-									.println("RegistForm--InterruptedException-注册线程池错误："
-											+ e.toString());
-						} catch (ExecutionException e1) {
-
-							System.err
-									.println("RegistForm--ExecutionException-注册线程池错误："
-											+ e.toString());
-
-						}
-
-					} else {// 密码不相等
+					} else {// 两次输入密码不统一
 						JOptionPane.showMessageDialog(null,
 								"同学，密码两次输入的不一样你都不知道么？", "健忘的少年",
 								JOptionPane.ERROR_MESSAGE);
 						return;
 					}
-				} else {// 长度太短
+				} else {// 长度小于6
 					JOptionPane.showMessageDialog(null, "同学，密码长度最少6位。",
 							"无知的少年", JOptionPane.ERROR_MESSAGE);
 				}
@@ -182,38 +125,15 @@ public class RegistForm extends JFrame {
 			}
 		});
 
-		resetButton.addMouseListener(new MouseListener() {
+		// 重置按钮按下
+		resetButton.addActionListener(new ActionListener() {
 
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				ClearContext();
-
+			public void actionPerformed(ActionEvent e) {
+				ClearContext();// 清空所有输入框中的内容
 			}
 		});
+
 	}
 
 	public RegistForm() {
@@ -223,7 +143,7 @@ public class RegistForm extends JFrame {
 		this.setResizable(false);
 		this.setLayout(null);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		this.socket = ClientDataCenter.regUserSocket;
+
 		InitGUI();
 		this.repaint();
 
@@ -242,7 +162,7 @@ public class RegistForm extends JFrame {
 	/**
 	 * 验证密码是否统一
 	 * 
-	 * @return 返回布尔值
+	 * @return 如果两次密码相同，返回true。否则返回false。
 	 */
 	private boolean validationPasswd() {
 		char[] ctemp1 = userPasswd1.getPassword();
@@ -256,6 +176,9 @@ public class RegistForm extends JFrame {
 		}
 	}
 
+	/**
+	 * 关闭本窗口，转到登录窗口
+	 */
 	private void turnToLoginForm() {
 		loginForm = new LoginForm();
 		loginForm.setVisible(true);

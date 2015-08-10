@@ -7,6 +7,7 @@ import util.TcpSocketUtil;
 public class SendMsgToServerThread extends Thread {
 	private Socket socket;
 	private String msg;
+	private final static String NOR_HEAD = "#NORMAL#";
 
 	public SendMsgToServerThread(Socket socket, String msg) {
 		this.socket = socket;
@@ -15,6 +16,6 @@ public class SendMsgToServerThread extends Thread {
 
 	@Override
 	public void run() {
-		TcpSocketUtil.sendClientData(this.socket, this.msg);
+		TcpSocketUtil.sendStringToServer(socket, NOR_HEAD + msg);
 	}
 }
